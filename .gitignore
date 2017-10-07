@@ -1,0 +1,6 @@
+*
+!init.el
+!.gitignore
+!snippets/
+!custom-load-files/*
+!README.org

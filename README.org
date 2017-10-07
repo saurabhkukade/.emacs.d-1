@@ -1,0 +1,36 @@
+* Swanand's Emacs config
+  This repo contains my personal Emacs configuration. It shouldn't have problems working on Linux and Mac OS X.
+  I am using version =25.1.1=. I have used [[https://github.com/jwiegley/use-package][use-package]] to write my configuration.
+
+  Earlier, I was religious towards =vim=, until [[https://github.com/ghoseb][Baishampayan Ghose]] showed his Emacs to us in our college and I was amazed by the powers of Emacs!
+  Now, a Emacs lover! :v: :sunglasses:
+
+* References
+  I have referred following resources to configure my Emacs:
+   + Baishampayan Ghose: https://github.com/ghoseb/dotemacs
+   + Magnar Sveen: https://github.com/magnars/.emacs.d
+   + [[http://emacsrocks.com/][Emacs Rocks]]
+   + http://whattheemacsd.com/
+   + Bozhidar Batsov: https://github.com/bbatsov/emacs.d
+   + Harry R. Schwartz: https://github.com/hrs/dotfiles/tree/master/emacs/.emacs.d
+   + Steve Purcell: https://github.com/purcell/emacs.d
+   + Harry R. Schwartz's [[https://youtu.be/SzA2YODtgK4][talk on Org mode]].
+   + Sacha Chua: https://github.com/sachac/.emacs.d
+   + Wilfred Hughes: https://github.com/Wilfred/.emacs.d
+   + Howard Abrams: https://github.com/howardabrams/dot-files
+   + http://pragmaticemacs.com/
+   + http://emacs.readthedocs.io/en/latest/
+
+* Prerequisites
+** General
+   I am using [[http://aspell.net/][aspell]] for spell checking. Make sure you install it before you use this config.
+** Mac OS X
+   I love [[https://github.com/adobe-fonts/source-code-pro][Source Code Pro]] font. I would highly recommend for Linux as well.
+   It has:
+    + Crisp clear characters.
+    + Good use of whitespace.
+    + ‘l’, ‘1’ and ‘i’ are easily distinguished.
+    + ‘0’, ‘o’ and ‘O’ are easily distinguished and many more!
+
+* Improvements
+  If you find any bugs or can improve it, Pull Requests are most welcome!
