@@ -531,10 +531,12 @@ Otherwise point moves to beginning of line."
 
 (use-package neotree
   :init (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
-  :bind ("<f8>" . neotree-project-dir)
-  :config (evil-insert-state)) ;; because evil-normal state key bindings conflicts with neotree
-;; If you want to configure normal state keybindings, you can refer below link:
-;; https://www.emacswiki.org/emacs/NeoTree
+  :bind ("<f11>" . neotree-project-dir)
+  :config
+  (evil-define-key 'normal neotree-mode-map (kbd "TAB") 'neotree-enter)
+  (evil-define-key 'normal neotree-mode-map (kbd "SPC") 'neotree-quick-look)
+  (evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
+  (evil-define-key 'normal neotree-mode-map (kbd "RET") 'neotree-enter))
 
 (use-package magit
   :defer t
