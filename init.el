@@ -127,6 +127,9 @@
                                          try-complete-lisp-symbol-partially
                                          try-complete-lisp-symbol))
 
+;; This automatically scrolls the compilation window so I can always see the output without switching to it.
+(setq compilation-scroll-output t)
+
 ;; smart tab behavior - indent or complete
 (setq tab-always-indent 'complete)
 
@@ -206,13 +209,11 @@
  '(evil-leader/leader ",")
  '(package-selected-packages
    (quote
-    (haskell-mode beacon neotree rvm chruby protobuf-mode evil-nerd-commenter web-mode emmet-mode hl-todo highlight-numbers rainbow-identifiers ace-window ace-jump-mode org-mode org-bullets company-quickhelp idle-highlight-mode dumb-jump swiper ox-jira ox-gfm scss-mode bundler rubocop rspec-mode ruby-tools ruby-hash-syntax smart-forward projectile-rails robe company-anaconda company-restclient pip-requirements anaconda-mode restclient git-timemachine company smartscan evil-escape evil-paredit evil-leader evil-matchit try helm-projectile yasnippet helm-swoop dired+ immortal-scratch js2-mode highlight-escape-sequences page-break-lines helm-spotify helm-gitignore docker docker-compose-mode flyspell-correct-helm csv-mode persistent-scratch move-text super-save paredit dockerfile-mode cask-mode yaml-mode markdown-mode dired flycheck flyspell-lazy diff-hl which-key undo-tree rainbow-mode rainbow-delimiters expand-region multiple-cursors nyan-mode magit-blame magit all-the-icons show-paren-mode powerline smart-mode-line monokai-theme use-package exec-path-from-shell auto-compile))))
-
+    (ido-vertical-mode flx-ido magithub smerge origami multi-term super-save haskell-mode beacon neotree rvm chruby protobuf-mode evil-nerd-commenter web-mode emmet-mode hl-todo highlight-numbers rainbow-identifiers ace-window ace-jump-mode org-mode org-bullets company-quickhelp idle-highlight-mode dumb-jump swiper ox-jira ox-gfm scss-mode bundler rubocop rspec-mode ruby-tools ruby-hash-syntax smart-forward projectile-rails robe company-anaconda company-restclient pip-requirements anaconda-mode restclient git-timemachine company smartscan evil-escape evil-leader evil-matchit try helm-projectile yasnippet helm-swoop dired+ immortal-scratch js2-mode highlight-escape-sequences page-break-lines helm-spotify helm-gitignore docker docker-compose-mode flyspell-correct-helm csv-mode persistent-scratch move-text dockerfile-mode cask-mode yaml-mode markdown-mode dired flycheck flyspell-lazy diff-hl which-key undo-tree rainbow-mode rainbow-delimiters expand-region multiple-cursors nyan-mode magit-blame magit all-the-icons show-paren-mode powerline smart-mode-line monokai-theme use-package exec-path-from-shell auto-compile))))
 
 ;;------------------
 ;; Custom Functions
 ;;------------------
-
 
 (defun view-buffer-name ()
   "Display the filename of the current buffer."
@@ -300,24 +301,22 @@
   (other-window 1))
 
 
-(defun rename-buffer-and-file ()
-  "Rename current buffer and file it is visiting."
+(defun crux-rename-file-and-buffer ()
+  "Rename current buffer and if the buffer is visiting a file, rename it too."
   (interactive)
-  (let ((name (buffer-name))
-        (filename (buffer-file-name))
-        (read-file-name-function 'read-file-name-default))
+  (let ((filename (buffer-file-name)))
     (if (not (and filename (file-exists-p filename)))
-        (error "Buffer '%s' is not visiting a file!" name)
-      (let ((new-name (read-file-name "New name: " filename)))
-        (cond ((get-buffer new-name)
-               (error "A buffer named '%s' already exists!" new-name))
-              (t
-               (rename-file filename new-name 1)
-               (rename-buffer new-name)
-               (set-visited-file-name new-name)
-               (set-buffer-modified-p nil)
-               (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
+        (rename-buffer (read-from-minibuffer "New name: " (buffer-name)))
+      (let* ((new-name (read-from-minibuffer "New name: " filename))
+             (containing-dir (file-name-directory new-name)))
+        (make-directory containing-dir t)
+        (cond
+         ((vc-backend filename) (vc-rename-file filename new-name))
+         (t
+          (rename-file filename new-name t)
+          (set-visited-file-name new-name t t)))))))
 
+(defalias 'crux-rename-buffer-and-file #'crux-rename-file-and-buffer)
 
 (defun delete-buffer-and-file ()
   "Remove file connected to current buffer and kill buffer."
@@ -399,10 +398,55 @@ Otherwise point moves to beginning of line."
   (run-with-timer 0.05 nil 'invert-face 'mode-line))
 (setq-default ring-bell-function 'sanityinc/flash-mode-line)
 
+;; Buffer switching
+(defun xah-next-user-buffer ()
+  "Switch to the next user buffer.
+“user buffer” is determined by `xah-user-buffer-q'.
+URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
+Version 2016-06-19"
+  (interactive)
+  (next-buffer)
+  (let ((i 0))
+    (while (< i 20)
+      (if (not (xah-user-buffer-q))
+          (progn (next-buffer)
+                 (setq i (1+ i)))
+        (progn (setq i 100))))))
+
+(defun xah-previous-user-buffer ()
+  "Switch to the previous user buffer.
+“user buffer” is determined by `xah-user-buffer-q'.
+URL `http://ergoemacs.org/emacs/elisp_next_prev_user_buffer.html'
+Version 2016-06-19"
+  (interactive)
+  (previous-buffer)
+  (let ((i 0))
+    (while (< i 20)
+      (if (not (xah-user-buffer-q))
+          (progn (previous-buffer)
+                 (setq i (1+ i)))
+        (progn (setq i 100))))))
+
+(defun xah-user-buffer-q ()
+  "Return t if current buffer is a user buffer, else nil.
+Typically, if buffer name starts with *, it's not considered a user buffer.
+This function is used by buffer switching command and close buffer command, so that next buffer shown is a user buffer.
+You can override this function to get your idea of “user buffer”.
+version 2016-06-18"
+  (interactive)
+  (if (string-equal "*" (substring (buffer-name) 0 1))
+      nil
+    (if (string-equal major-mode "dired-mode")
+        nil
+      t)))
+
 ;;--------------------------------------------
 ;; Package configurations
 ;;--------------------------------------------
+(use-package dash)
+
 (use-package helm-swoop
+  :defer t
   :init (global-unset-key (kbd "s-s"))
   :bind (("s-s s" . helm-swoop)
          ("s-s a" . helm-multi-swoop-all)
@@ -410,6 +454,7 @@ Otherwise point moves to beginning of line."
          ("s-s p" . helm-multi-swoop-projectile)))
 
 (use-package helm-projectile
+  :defer t
   :bind ("M-p" . helm-projectile))
 
 ;; Referred from https://github.com/sachac/.emacs.d/blob/gh-pages/Sacha.org#helm---interactive-completion
@@ -450,12 +495,75 @@ Otherwise point moves to beginning of line."
 (use-package helm-ag
   :bind ("<f12>" . helm-projectile-ag))
 
+(use-package magit
+  :defer t
+  :bind (("M-<f12>" . magit-status)
+         ("C-c C-a" . magit-just-amend))
+  :config
+  (setq magit-diff-options '("-b")) ; ignore whitespace
+  (setq magit-default-tracking-name-function 'magit-default-tracking-name-branch-only)
+  (setq magit-set-upstream-on-push t)
+  (setq magit-stage-all-confirm nil)
+  (setq magit-unstage-all-confirm nil)
+  (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
+
 (use-package evil-leader
   :init (evil-leader/set-key
+          "g" 'magit-status
           "f" 'helm-find-files
           "b" 'switch-to-buffer
           "p" 'helm-projectile)
   :config (global-evil-leader-mode))
+
+(use-package smartparens
+  :defer t
+  :bind
+  (("C-M-f" . sp-forward-sexp)
+   ("C-M-b" . sp-backward-sexp)
+
+   ("C-<up>" . sp-up-sexp)
+   ("C-<down>" . sp-down-sexp)
+
+   ("C-M-a" . sp-beginning-of-sexp)
+   ("C-M-e" . sp-end-of-sexp)
+
+   ("C-M-d" . sp-backward-down-sexp)
+   ("C-M-u" . sp-backward-up-sexp)
+
+   ("C-M-t" . sp-transpose-sexp)
+
+   ("C-M-n" . sp-next-sexp)
+   ("C-M-p" . sp-previous-sexp)
+
+   ("C-M-k" . sp-kill-sexp)
+   ("C-M-w" . sp-copy-sexp)
+
+   ("C-<right>" . sp-forward-slurp-sexp)
+   ("C-<left>" . sp-forward-barf-sexp)
+   ("C-M-<left>" . sp-backward-slurp-sexp)
+   ("C-M-<right>" . sp-backward-barf-sexp)
+
+   ("M-S" . sp-split-sexp)
+
+   ("M-D" . sp-splice-sexp)
+
+   ("C-M-]" . sp-select-next-thing)
+
+   ("M-F" . sp-forward-symbol)
+   ("M-B" . sp-backward-symbol)
+
+   ;; ("M-<backspace>" . sp-unwrap-sexp)
+   ;; ("M-<backspace>" . sp-backward-unwrap-sexp)
+
+   ;; ("C-M-<delete>" . sp-splice-sexp-killing-forward)
+   ;; ("C-M-<backspace>" . sp-splice-sexp-killing-backward)
+   ;; ("C-S-<backspace>" . sp-splice-sexp-killing-around)
+
+   ;; ("C-]" . sp-select-next-thing-exchange)
+   ;; ("C-<left_bracket>" . sp-select-previous-thing)
+   )
+  :config
+  (smartparens-global-strict-mode))
 
 (use-package evil
   :init
@@ -477,9 +585,6 @@ Otherwise point moves to beginning of line."
 
 ;; (use-package evil-nerd-commenter
 ;;   :bind ("M-;" . evilnc-comment-or-uncomment-Highlight))
-
-(use-package evil-paredit
-  :config (add-hook 'emacs-lisp-mode-hook 'evil-paredit-mode))
 
 (use-package evil-escape
   :diminish evil-escape-mode
@@ -527,9 +632,11 @@ Otherwise point moves to beginning of line."
 (show-paren-mode t)
 (setq show-paren-delay 0.0)
 
-(use-package all-the-icons)
+(use-package all-the-icons
+  :defer t)
 
 (use-package neotree
+  :defer t
   :init (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
   :bind ("<f11>" . neotree-project-dir)
   :config
@@ -538,19 +645,8 @@ Otherwise point moves to beginning of line."
   (evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
   (evil-define-key 'normal neotree-mode-map (kbd "RET") 'neotree-enter))
 
-(use-package magit
-  :defer t
-  :bind (("C-x g" . magit-status)
-         ("C-c C-a" . magit-just-amend))
-  :config
-  (setq magit-diff-options '("-b")) ; ignore whitespace
-  (setq magit-default-tracking-name-function 'magit-default-tracking-name-branch-only)
-  (setq magit-set-upstream-on-push t)
-  (setq magit-stage-all-confirm nil)
-  (setq magit-unstage-all-confirm nil)
-  (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
-
-(use-package git-timemachine)
+(use-package git-timemachine
+  :defer t)
 
 (use-package multiple-cursors
   :defer t
@@ -627,6 +723,7 @@ Otherwise point moves to beginning of line."
                               "--run-together-min=2"))))
 
 (use-package flyspell-correct-helm
+  :defer t
   :config
   (define-key flyspell-mode-map (kbd "C-;") 'flyspell-correct-previous-word-generic))
 
@@ -668,37 +765,37 @@ Otherwise point moves to beginning of line."
   (setq dired-dwim-target t))
 
 (use-package rainbow-delimiters
+  :defer t
   :config (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 
 (use-package rainbow-mode
+  :defer t
   :config (add-hook 'prog-mode-hook #'rainbow-mode))
 
 
 (use-package markdown-mode
+  :defer t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :init (setq markdown-command "multimarkdown"))
 
-(use-package yaml-mode)
+(use-package yaml-mode
+  :defer t)
 
-(use-package cask-mode)
+(use-package cask-mode
+  :defer t)
 
-(use-package try)
+(use-package try
+  :defer t)
 
-(use-package dockerfile-mode)
-(use-package docker-compose-mode)
-(use-package docker)
-
-(use-package paredit
-  :ensure t
-  :config
-  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
-  (add-hook 'lisp-interaction-mode-hook #'paredit-mode)
-  (add-hook 'ielm-mode-hook #'paredit-mode)
-  (add-hook 'lisp-mode-hook #'paredit-mode)
-  (add-hook 'eval-expression-minibuffer-setup-hook #'paredit-mode))
+(use-package dockerfile-mode
+  :defer t)
+(use-package docker-compose-mode
+  :defer t)
+(use-package docker
+  :defer t)
 
 (use-package rainbow-identifiers
   :config (add-hook 'prog-mode-hook 'rainbow-identifiers-mode))
@@ -710,32 +807,41 @@ Otherwise point moves to beginning of line."
   (super-save-mode +1))
 
 (use-package move-text
+  :defer t
   :bind
   (([(meta shift up)] . move-text-up)
    ([(meta shift down)] . move-text-down)))
 
 (use-package ace-jump-mode
+  :defer t
   :bind ("s-c" . ace-jump-mode))
 
 (use-package ace-window
+  :defer t
   :bind ("s-w" . ace-window)
   :config (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
 
 (use-package dumb-jump
+  :defer t
   :bind ("s-." . dumb-jump-go)
-  :config (setq dumb-jump-selector 'helm))
+  :config
+  (add-hook 'dumb-jump-after-jump-hook 'recenter)
+  (setq dumb-jump-selector 'helm))
 
 (use-package persistent-scratch
   :config (persistent-scratch-setup-default))
 
 (use-package csv-mode
+  :defer t
   :config
   (setq csv-separators '("," ";" "|" " "))
   (add-auto-mode 'csv-mode "\\.[Cc][Ss][Vv]\\'"))
 
-(use-package helm-gitignore)
+(use-package helm-gitignore
+  :defer t)
 
 (use-package page-break-lines
+  :defer t
   :diminish page-break-lines-mode
   :config (global-page-break-lines-mode))
 
@@ -759,7 +865,8 @@ Otherwise point moves to beginning of line."
   :config
   (add-hook 'js2-mode-hook (lambda () (setq js2-basic-offset 2))))
 
-(use-package json-mode)
+(use-package json-mode
+  :defer t)
 
 ;; (use-package pretty-mode
 ;;   :pin manual
@@ -827,18 +934,22 @@ Otherwise point moves to beginning of line."
   :config (company-quickhelp-mode 1))
 
 ;; https://github.com/pashky/restclient.el
-(use-package restclient)
+(use-package restclient
+  :defer t)
 
 (use-package company-restclient
+  :defer t
   :init (add-to-list 'company-backends 'company-restclient))
 
 (use-package smart-forward
+  :defer t
   :bind (("M-<up>" . smart-up)
          ("M-<down>" . smart-down)
          ("M-<left>" . smart-backward)
          ("M-<right>" . smart-forward)))
 
 (use-package swiper
+  :defer t
   :bind ("C-s" . swiper))
 
 (use-package idle-highlight-mode
@@ -847,6 +958,7 @@ Otherwise point moves to beginning of line."
 ;; Python
 ;; https://github.com/proofit404/anaconda-mode
 (use-package anaconda-mode
+  :defer t
   :diminish anaconda-mode
   :diminish eldoc-mode
   :config
@@ -854,9 +966,11 @@ Otherwise point moves to beginning of line."
   (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
 
 (use-package company-anaconda
+  :defer t
   :init (add-to-list 'company-backends 'company-anaconda))
 
 (use-package pip-requirements
+  :defer t
   :config (add-hook 'pip-requirements-mode-hook 'pip-requirements-auto-complete-setup))
 
 ;; TODO: execute ruby block and show it in comment like magic
@@ -866,43 +980,61 @@ Otherwise point moves to beginning of line."
 
 
 ;; http://haskell.github.io/haskell-mode/
-(use-package haskell-mode)
+(use-package haskell-mode
+  :defer t)
 
 ;; Ruby and Rails
 (use-package rvm
   :config (add-hook 'ruby-mode-hook 'rvm-activate-corresponding-ruby))
 
-(use-package ruby-hash-syntax)
+(use-package ruby-hash-syntax
+  :defer t)
 
 (use-package ruby-tools
+  :defer t
   :diminish ruby-tools-mode
   :config (add-hook 'ruby-mode-hook 'ruby-tools-mode))
 
 (use-package robe
-  :init (push 'company-robe company-backends))
+  :defer t
+  :init (push 'company-robe company-backends)
+  :config (add-hook 'ruby-mode-hook #'robe-mode))
 
 (use-package projectile-rails
+  :defer t
   :diminish projectile-rails-mode
   :init (setq projectile-rails-keymap-prefix (kbd "<f2>"))
-  :bind (:map projectile-rails-mode-map ("M-<f1>" . robe-jump)))
+  :bind (:map projectile-rails-mode-map ("M-<f1>" . robe-jump))
+  :config (projectile-rails-global-mode +1))
+
 
 (use-package ruby-mode
+  :defer t
+  :init (setq-default ruby-use-encoding-map nil
+                      ruby-insert-encoding-magic-comment nil)
   :config (add-hook 'ruby-mode-hook 'projectile-rails-mode))
 
 (use-package rspec-mode
+  :defer t
   :no-require t
-  :init (setq rspec-command-options "--color --order random")
+  :init
+  (setq rspec-command-options "--color --order random")
+  (make-local-variable 'compilation-scroll-output)
+  (setq compilation-scroll-output 'first-error)
   :config
   (rspec-install-snippets)
   (add-hook 'ruby-mode-hook 'rspec-mode))
 
-(use-package rubocop)
+(use-package rubocop
+  :defer t)
 
 (use-package bundler
+  :defer t
   :no-require t)
 
 ;; Web files
 (use-package web-mode
+  :defer t
   :diminish web-mode
   :mode ("\\.html?\\'" "\\.erb\\'")
   :config
@@ -915,31 +1047,38 @@ Otherwise point moves to beginning of line."
   (setq web-mode-enable-current-column-highlight t)
   (setq web-mode-ac-sources-alist '(("css" . (ac-source-css-property))
                                     ("html" . (ac-source-words-in-buffer ac-source-abbrev))))
-  (rspec-mode +1)
-  (projectile-rails-mode +1))
+  (add-hook 'web-mode-hook 'rspec-mode)
+  (add-hook 'web-mode-hook 'projectile-rails-mode))
 
 (use-package emmet-mode
+  :defer t
   :diminish emmet-mode
   :config (add-hook 'web-mode-hook 'emmet-mode))
 
 (use-package scss-mode
+  :defer t
   :config (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode)))
 
 ;; Org mode
-(use-package ox-gfm)
+(use-package ox-gfm
+  :defer t)
 
-(use-package org-bullets)
+(use-package org-bullets
+  :defer t)
 
 (use-package org
   :defer t
   :no-require t
   :bind ("C-c l" . org-store-link)
   :config
+  (add-to-list 'org-structure-template-alist '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+  (add-to-list 'org-structure-template-alist '("r" "#+BEGIN_SRC ruby\n?\n#+END_SRC"))
   (setq org-ellipsis "⤵")
   (setq org-src-fontify-natively t)
   (setq org-html-validation-link nil)
   (setq org-export-with-smart-quotes t)
   (setq org-src-window-setup 'current-window)
+
   ;; exporting to pdf
   (setq org-latex-pdf-process
         '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
@@ -954,7 +1093,70 @@ Otherwise point moves to beginning of line."
 
 
 ;; Protocol buffers
-(use-package protobuf-mode)
+(use-package protobuf-mode
+  :defer t)
+
+(use-package smerge-mode
+  :no-require t
+  :bind (:map smerge-mode-map
+              ("<f7>" . smerge-keep-mine)
+              ("<f8>" . smerge-keep-all)
+              ("<f9>" . smerge-keep-other)))
+
+(use-package ido
+  :ensure t
+  :config
+  (setq ido-enable-prefix nil
+        ido-everywhere t
+        ido-enable-flex-matching t
+        ido-create-new-buffer 'always
+        ido-use-filename-at-point 'guess
+        ido-max-prospects 10
+        ido-save-directory-list-file (expand-file-name "ido.hist" swanand-savefile-dir)
+        ido-default-file-method 'selected-window
+        ido-auto-merge-work-directories-length -1)
+  (ido-mode +1))
+
+(use-package flx-ido
+  :ensure t
+  :config
+  (flx-ido-mode +1)
+  ;; disable ido faces to see flx highlights
+  (setq ido-use-faces nil))
+
+(use-package ido-vertical-mode
+  :ensure t
+  :config
+  (setq ido-vertical-show-count t)
+  (setq ido-use-faces t)
+  (setq ido-vertical-define-keys 'C-n-C-p-up-and-down)
+  (set-face-attribute 'ido-vertical-first-match-face nil
+                      :background nil
+                      :foreground "orange")
+  (set-face-attribute 'ido-vertical-only-match-face nil
+                      :background nil
+                      :foreground nil)
+  (set-face-attribute 'ido-vertical-match-face nil
+                      :foreground nil)
+  (ido-vertical-mode 1))
+
+;; (use-package volatile-highlights
+;;   :disabled t
+;;   :config
+;;   ;;-----------------------------------------------------------------------------
+;;   ;; Supporting evil-mode.
+;;   ;;-----------------------------------------------------------------------------
+;;   (vhl/define-extension 'evil 'evil-paste-after 'evil-paste-before
+;;                         'evil-paste-pop 'evil-move)
+;;   (vhl/install-extension 'evil)
+
+;;   ;;-----------------------------------------------------------------------------
+;;   ;; Supporting undo-tree.
+;;   ;;-----------------------------------------------------------------------------
+;;   (vhl/define-extension 'undo-tree 'undo-tree-yank 'undo-tree-move)
+;;   (vhl/install-extension 'undo-tree)
+
+;;   (volatile-highlights-mode +1))
 
 ;; show comments in italics
 (set-face-italic 'font-lock-comment-face t)
@@ -969,7 +1171,6 @@ Otherwise point moves to beginning of line."
 ;; PENDING ITEMS
 ;; code folding
 ;; multiple cursors: mark next && previous symbol not working
-;; smartparens OR paredit?
 ;; all helm functionalities to be explored
 ;; projectile functionalities to be explored
 ;; org: I am just doing baby steps. Have to use it to its full capacity!
@@ -999,15 +1200,15 @@ Otherwise point moves to beginning of line."
 
 (bind-key "M-;" 'comment-or-uncomment-current-line-or-region)
 
-(bind-key "M-]" 'next-buffer)
-(bind-key "M-[" 'previous-buffer)
+(bind-key "M-]" 'xah-next-user-buffer)
+(bind-key "M-[" 'xah-previous-user-buffer)
 
-(bind-key "M-s" 'save-buffer)
+;;(bind-key "M-s" 'save-buffer)
 
 (bind-key "M-*" 'pop-tag-mark)
 
 (bind-key "C-c s" 'swap-windows)
-(bind-key "C-c r" 'rename-buffer-and-file)
+(bind-key "C-c r" 'crux-rename-buffer-and-file)
 (bind-key "C-c k" 'delete-buffer-and-file)
 
 (bind-key "s-[" 'scroll-down-five)
@@ -1027,3 +1228,9 @@ Otherwise point moves to beginning of line."
 (bind-key "C-x C-c" (lambda () (interactive)
                       (if (y-or-n-p "Quit Emacs? ")
                           (save-buffers-kill-emacs))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(idle-highlight ((t (:underline "green1")))))
