@@ -67,12 +67,12 @@
 (setq large-file-warning-threshold 100000000)
 
 (defconst swanand-savefile-dir (expand-file-name "savefile" user-emacs-directory))
-
                                         ;create the savefile dir if it doesn't exist
 (unless (file-exists-p swanand-savefile-dir)
   (make-directory swanand-savefile-dir))
 
 (setq ring-bell-function 'ignore)
+
 
 ;; nice scrolling
 (setq scroll-margin 0
@@ -98,6 +98,8 @@
 
 ;; delete the selection with a keypress
 (delete-selection-mode t)
+
+(setq save-interprogram-paste-before-kill t)
 
 ;; store all backup and autosave files in the tmp dir
 (setq backup-directory-alist
@@ -677,7 +679,7 @@ version 2016-06-18"
     (add-hook hook #'whitespace-mode))
   (add-hook 'before-save-hook #'whitespace-cleanup)
   :config
-  (setq whitespace-line-column 120) ;; show chars after column 120 in different face
+  (setq whitespace-line-column 100) ;; show chars after column 100 in different face
   (setq whitespace-style '(face tabs empty trailing lines-tail)))
 
 
