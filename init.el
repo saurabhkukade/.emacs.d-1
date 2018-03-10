@@ -67,7 +67,10 @@
 (setq large-file-warning-threshold 100000000)
 
 (defconst swanand-savefile-dir (expand-file-name "savefile" user-emacs-directory))
-                                        ;create the savefile dir if it doesn't exist
+
+(defvar swanand/current-theme 'leuven)
+
+;; create the savefile dir if it doesn't exist
 (unless (file-exists-p swanand-savefile-dir)
   (make-directory swanand-savefile-dir))
 
@@ -85,7 +88,7 @@
 (size-indication-mode t)
 (display-time-mode 1)
 
-(add-hook 'prog-mode-hook 'linum-mode)
+;; (add-hook 'prog-mode-hook 'linum-mode)
 
 ;; enable y/n answers
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -159,7 +162,6 @@
 (put 'downcase-region 'disabled nil) ;; C-x C-l to upper case enabled
 
 ;; Trailing whitespace
-(setq-default show-trailing-whitespace t)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 ;; Enable transient mark mode
@@ -194,6 +196,10 @@
       desktop-auto-save-timeout 600)
 (desktop-save-mode 1)
 
+(defadvice exchange-point-and-mark (before deactivate-mark activate compile)
+  "When called with no active region, do not activate mark."
+  (interactive
+   (list (not (region-active-p)))))
 
 ;;------------------
 ;; Custom Variables
@@ -203,15 +209,61 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ansi-color-faces-vector
+   [default default default italic underline success warning error])
+ '(compilation-message-face (quote default))
  '(custom-safe-themes
    (quote
-    ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "c924950f6b5b92a064c5ad7063bb34fd3facead47cd0d761a31e7e76252996f7" default)))
+    ("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "c924950f6b5b92a064c5ad7063bb34fd3facead47cd0d761a31e7e76252996f7" default)))
  '(evil-escape-key-sequence "jk")
  '(evil-escape-unordered-key-sequence t)
  '(evil-leader/leader ",")
+ '(fci-rule-color "#3C3D37")
+ '(global-linum-mode nil)
+ '(highlight-changes-colors (quote ("#FD5FF0" "#AE81FF")))
+ '(highlight-tail-colors
+   (quote
+    (("#3C3D37" . 0)
+     ("#679A01" . 20)
+     ("#4BBEAE" . 30)
+     ("#1DB4D0" . 50)
+     ("#9A8F21" . 60)
+     ("#A75B00" . 70)
+     ("#F309DF" . 85)
+     ("#3C3D37" . 100))))
+ '(hl-sexp-background-color "#efebe9")
+ '(magit-diff-use-overlays nil)
+ '(org-agenda-files nil)
  '(package-selected-packages
    (quote
-    (ido-vertical-mode flx-ido magithub smerge origami multi-term super-save haskell-mode beacon neotree rvm chruby protobuf-mode evil-nerd-commenter web-mode emmet-mode hl-todo highlight-numbers rainbow-identifiers ace-window ace-jump-mode org-mode org-bullets company-quickhelp idle-highlight-mode dumb-jump swiper ox-jira ox-gfm scss-mode bundler rubocop rspec-mode ruby-tools ruby-hash-syntax smart-forward projectile-rails robe company-anaconda company-restclient pip-requirements anaconda-mode restclient git-timemachine company smartscan evil-escape evil-leader evil-matchit try helm-projectile yasnippet helm-swoop dired+ immortal-scratch js2-mode highlight-escape-sequences page-break-lines helm-spotify helm-gitignore docker docker-compose-mode flyspell-correct-helm csv-mode persistent-scratch move-text dockerfile-mode cask-mode yaml-mode markdown-mode dired flycheck flyspell-lazy diff-hl which-key undo-tree rainbow-mode rainbow-delimiters expand-region multiple-cursors nyan-mode magit-blame magit all-the-icons show-paren-mode powerline smart-mode-line monokai-theme use-package exec-path-from-shell auto-compile))))
+    (browse-at-remote multi-term flymake-ruby kubernetes helm-dash dimmer ido-vertical-mode flx-ido smerge origami super-save haskell-mode beacon neotree rvm chruby protobuf-mode evil-nerd-commenter web-mode emmet-mode hl-todo highlight-numbers rainbow-identifiers ace-window ace-jump-mode org-mode org-bullets company-quickhelp idle-highlight-mode dumb-jump swiper ox-jira ox-gfm scss-mode bundler rubocop rspec-mode ruby-tools ruby-hash-syntax smart-forward projectile-rails robe company-anaconda company-restclient pip-requirements anaconda-mode restclient git-timemachine company smartscan evil-escape evil-leader evil-matchit try helm-projectile yasnippet helm-swoop dired+ immortal-scratch js2-mode highlight-escape-sequences page-break-lines helm-spotify helm-gitignore docker docker-compose-mode flyspell-correct-helm csv-mode persistent-scratch move-text dockerfile-mode cask-mode yaml-mode markdown-mode dired flycheck flyspell-lazy diff-hl which-key undo-tree rainbow-mode rainbow-delimiters expand-region multiple-cursors nyan-mode magit-blame magit all-the-icons show-paren-mode monokai-theme use-package exec-path-from-shell auto-compile)))
+ '(pos-tip-background-color "#FFFACE")
+ '(pos-tip-foreground-color "#272822")
+ '(vc-annotate-background nil)
+ '(vc-annotate-color-map
+   (quote
+    ((20 . "#F92672")
+     (40 . "#CF4F1F")
+     (60 . "#C26C0F")
+     (80 . "#E6DB74")
+     (100 . "#AB8C00")
+     (120 . "#A18F00")
+     (140 . "#989200")
+     (160 . "#8E9500")
+     (180 . "#A6E22E")
+     (200 . "#729A1E")
+     (220 . "#609C3C")
+     (240 . "#4E9D5B")
+     (260 . "#3C9F79")
+     (280 . "#A1EFE4")
+     (300 . "#299BA6")
+     (320 . "#2896B5")
+     (340 . "#2790C3")
+     (360 . "#66D9EF"))))
+ '(vc-annotate-very-old-color nil)
+ '(weechat-color-list
+   (unspecified "#272822" "#3C3D37" "#F70057" "#F92672" "#86C30D" "#A6E22E" "#BEB244" "#E6DB74" "#40CAE4" "#66D9EF" "#FB35EA" "#FD5FF0" "#74DBCD" "#A1EFE4" "#F8F8F2" "#F8F8F0"))
+ '(which-function-mode nil))
 
 ;;------------------
 ;; Custom Functions
@@ -242,7 +294,6 @@
   "Scrolls up five rows."
   (interactive)
   (scroll-up 5))
-
 
 (defun open-line-below ()
   (interactive)
@@ -339,7 +390,6 @@
   (dolist (pattern patterns)
     (add-to-list 'auto-mode-alist (cons pattern mode))))
 
-
 (defun back-to-indentation-or-beginning-of-line ()
   "Move point back to indentation if there is any
 non blank characters to the left of the cursor.
@@ -349,13 +399,11 @@ Otherwise point moves to beginning of line."
       (beginning-of-line)
     (back-to-indentation)))
 
-
 (defun kill-region-or-backward-word ()
   (interactive)
   (if (region-active-p)
       (kill-region (region-beginning) (region-end))
     (backward-kill-word 1)))
-
 
 ;; NOTE: (region-beginning) and (region-end) are not saved in
 ;; variables since they can change after each clean step.
@@ -400,6 +448,30 @@ Otherwise point moves to beginning of line."
   (run-with-timer 0.05 nil 'invert-face 'mode-line))
 (setq-default ring-bell-function 'sanityinc/flash-mode-line)
 
+(defun swanand/show-comments-in-italics ()
+  "Show comments in italics."
+  (set-face-italic 'font-lock-comment-face t)
+  (set-face-italic 'font-lock-comment-delimiter-face t))
+
+(defun swanand/reset-all-themes-and-load-specific-themes (global-theme modeline-theme)
+  "Disable all custom enabled themes and load the specified GLOBAL-THEME and MODELINE-THEME."
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme global-theme t)
+  (swanand/show-comments-in-italics)
+  (setq sml/theme modeline-theme)
+  (sml/setup))
+
+(defun swanand/toggle-theme ()
+  "Toggle theme between monokai and leuven."
+  (interactive)
+  (if (eq swanand/current-theme 'monokai)
+      (progn
+        (setq swanand/current-theme 'leuven)
+        (swanand/reset-all-themes-and-load-specific-themes swanand/current-theme 'light))
+    (progn
+      (setq swanand/current-theme 'monokai)
+      (swanand/reset-all-themes-and-load-specific-themes swanand/current-theme 'dark))))
+
 ;; Buffer switching
 (defun xah-next-user-buffer ()
   "Switch to the next user buffer.
@@ -441,6 +513,11 @@ version 2016-06-18"
     (if (string-equal major-mode "dired-mode")
         nil
       t)))
+
+(defun bjm/align-whitespace (start end)
+  "Align columns by whitespace."
+  (interactive "r")
+  (align-regexp start end "\\(\\s-*\\)\\s-" 1 0 t))
 
 ;;--------------------------------------------
 ;; Package configurations
@@ -495,6 +572,7 @@ version 2016-06-18"
          ("C-x c SPC" . helm-all-mark-rings)))
 
 (use-package helm-ag
+  :config (setq helm-ag-insert-at-point 'symbol)
   :bind ("<f12>" . helm-projectile-ag))
 
 (use-package magit
@@ -592,10 +670,13 @@ version 2016-06-18"
   :diminish evil-escape-mode
   :config (evil-escape-mode +1))
 
+(use-package leuven-theme
+  :defer t)
+
 (use-package monokai-theme
   :ensure t
-  :config
-  (load-theme 'monokai t))
+  :config (load-theme 'monokai t))
+
 
 (use-package beacon
   :diminish beacon-mode
@@ -678,10 +759,12 @@ version 2016-06-18"
   (dolist (hook '(prog-mode-hook text-mode-hook))
     (add-hook hook #'whitespace-mode))
   (add-hook 'before-save-hook #'whitespace-cleanup)
+  (add-hook 'prog-mode-hook (lambda ()
+                              (setq show-trailing-whitespace t)
+                              (whitespace-mode 1)))
   :config
   (setq whitespace-line-column 100) ;; show chars after column 100 in different face
   (setq whitespace-style '(face tabs empty trailing lines-tail)))
-
 
 (use-package undo-tree
   :diminish undo-tree-mode
@@ -825,7 +908,8 @@ version 2016-06-18"
 
 (use-package dumb-jump
   :defer t
-  :bind ("s-." . dumb-jump-go)
+  :bind (("s-." . dumb-jump-go)
+         ("s-/" . dumb-jump-back))
   :config
   (add-hook 'dumb-jump-after-jump-hook 'recenter)
   (setq dumb-jump-selector 'helm))
@@ -929,6 +1013,8 @@ version 2016-06-18"
   ;; candidate. Otherwise, we end with a function foo shown as "foof".
   (setq company-tooltip-align-annotations t)
 
+  (setq company-dabbrev-downcase nil)
+
   (global-company-mode))
 
 (use-package company-quickhelp
@@ -986,6 +1072,9 @@ version 2016-06-18"
   :defer t)
 
 ;; Ruby and Rails
+(use-package flymake-ruby
+  :config (add-hook 'ruby-mode-hook 'flymake-ruby-load))
+
 (use-package rvm
   :config (add-hook 'ruby-mode-hook 'rvm-activate-corresponding-ruby))
 
@@ -1015,6 +1104,11 @@ version 2016-06-18"
   :init (setq-default ruby-use-encoding-map nil
                       ruby-insert-encoding-magic-comment nil)
   :config (add-hook 'ruby-mode-hook 'projectile-rails-mode))
+
+(use-package inf-ruby
+  :defer t
+  :config
+  (add-hook 'ruby-mode-hook 'inf-ruby-minor-mode))
 
 (use-package rspec-mode
   :defer t
@@ -1075,6 +1169,8 @@ version 2016-06-18"
   :config
   (add-to-list 'org-structure-template-alist '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
   (add-to-list 'org-structure-template-alist '("r" "#+BEGIN_SRC ruby\n?\n#+END_SRC"))
+
+  (setq org-hide-emphasis-markers t)
   (setq org-ellipsis "⤵")
   (setq org-src-fontify-natively t)
   (setq org-html-validation-link nil)
@@ -1142,27 +1238,38 @@ version 2016-06-18"
                       :foreground nil)
   (ido-vertical-mode 1))
 
-;; (use-package volatile-highlights
-;;   :disabled t
-;;   :config
-;;   ;;-----------------------------------------------------------------------------
-;;   ;; Supporting evil-mode.
-;;   ;;-----------------------------------------------------------------------------
-;;   (vhl/define-extension 'evil 'evil-paste-after 'evil-paste-before
-;;                         'evil-paste-pop 'evil-move)
-;;   (vhl/install-extension 'evil)
+(use-package dimmer
+  :ensure t
+  :bind (("H-d a" . dimmer-activate)
+         ("H-d d" . dimmer-deactivate))
+  :config
+  (setq dimmer-percent 0.33)
+  (setq dimmer-exclusion-regexp "*helm*")
+  (dimmer-activate))
 
-;;   ;;-----------------------------------------------------------------------------
-;;   ;; Supporting undo-tree.
-;;   ;;-----------------------------------------------------------------------------
-;;   (vhl/define-extension 'undo-tree 'undo-tree-yank 'undo-tree-move)
-;;   (vhl/install-extension 'undo-tree)
+(use-package helm-dash
+  :defer t
+  :config
+  (setq helm-dash-docsets-path "/Users/swanand/Library/Application Support/Dash/DocSets"))
 
-;;   (volatile-highlights-mode +1))
+(use-package kubernetes
+  :defer t
+  :commands (kubernetes-overview))
 
-;; show comments in italics
-(set-face-italic 'font-lock-comment-face t)
-(set-face-italic 'font-lock-comment-delimiter-face t)
+(use-package multi-term
+  :ensure t
+  :init
+  :bind ("C-c t" . multi-term)
+  :config
+  (setq show-trailing-whitespace nil)
+  (evil-set-initial-state 'term-mode 'emacs)
+  (setq multi-term-program-switches "--login")
+  (setq multi-term-scroll-show-maximum-output t)
+  (add-hook 'term-mode-hook (lambda () (goto-address-mode))))
+
+(use-package browse-at-remote
+  :ensure t
+  :bind ("C-c g" . browse-at-remote))
 
 ;; extra diminish
 (with-eval-after-load 'hi-lock
@@ -1170,13 +1277,11 @@ version 2016-06-18"
 
 (diminish 'abbrev-mode)
 
+(add-hook 'after-init-hook 'inf-ruby-switch-setup)
 ;; PENDING ITEMS
 ;; code folding
-;; multiple cursors: mark next && previous symbol not working
-;; all helm functionalities to be explored
-;; projectile functionalities to be explored
+;; projectile switch projects
 ;; org: I am just doing baby steps. Have to use it to its full capacity!
-;; multiterm:
 ;; dired with colors
 ;; easy-kill
 
@@ -1186,8 +1291,12 @@ version 2016-06-18"
 (bind-key "RET" 'newline-and-indent)
 (bind-key "C-c n" 'clean-up-buffer-or-region)
 
+(bind-key "H-l" 'linum-mode)
+
 (bind-key "M-+" 'text-scale-increase)
 (bind-key "M--" 'text-scale-decrease)
+
+(bind-key "H-t" 'swanand/toggle-theme)
 
 (bind-key "M-k" 'kill-this-buffer)
 (bind-key "M-o" 'other-window)
@@ -1204,8 +1313,6 @@ version 2016-06-18"
 
 (bind-key "M-]" 'xah-next-user-buffer)
 (bind-key "M-[" 'xah-previous-user-buffer)
-
-;;(bind-key "M-s" 'save-buffer)
 
 (bind-key "M-*" 'pop-tag-mark)
 
@@ -1230,6 +1337,7 @@ version 2016-06-18"
 (bind-key "C-x C-c" (lambda () (interactive)
                       (if (y-or-n-p "Quit Emacs? ")
                           (save-buffers-kill-emacs))))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
