@@ -11,6 +11,9 @@
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
+(unless (package-installed-p 'diminish)
+  (package-install 'diminish))
+
 (add-to-list 'load-path (expand-file-name "custom-load-files" "~/.emacs.d/"))
 
 (setq use-package-verbose t)
